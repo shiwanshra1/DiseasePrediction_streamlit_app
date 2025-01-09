@@ -1,9 +1,8 @@
 import os
 import pickle
-import tempfile
 import streamlit as st
 from streamlit_option_menu import option_menu
-import fitz  # PyMuPDF
+import pandas as pd
 
 # Set up the page configuration
 st.set_page_config(page_title="Health Assistant", layout="wide", page_icon="🧑‍⚕️")
@@ -24,48 +23,12 @@ with st.sidebar:
         default_index=0
     )
 
-# Function to extract data from the uploaded PDF
-def extract_data_from_pdf(pdf_file):
-    # Save uploaded file temporarily
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
-        tmp_file.write(pdf_file.read())
-        tmp_file_path = tmp_file.name
-
-    # Open the saved PDF file using PyMuPDF
-    doc = fitz.open(tmp_file_path)
-    text = ""
-    for page in doc:
-        text += page.get_text()
-
-    # Extract basic patient details using keywords and fixed structure
-    name = "Not found"
-    gender = "Not found"
-    age = "Not found"
-    glucose = "Not found"
-    hemoglobin = "Not found"
-    cholesterol = "Not found"
-
-    if "Name" in text:
-        name = text.split("Name")[1].split(":")[-1].split("\n")[0].strip()
-    if "Gender" in text:
-        gender = text.split("Gender")[1].split(":")[-1].split("\n")[0].strip()
-    if "Age" in text:
-        age = text.split("Age")[1].split(":")[-1].split("\n")[0].strip()
-    if "GLUCOSE, RANDOM" in text:
-        glucose = text.split("GLUCOSE, RANDOM")[1].split()[0].strip()
-    if "Hemoglobin" in text:
-        hemoglobin = text.split("Hemoglobin")[1].split()[0].strip()
-    if "Serum Cholestoral" in text:
-        cholesterol = text.split("Serum Cholestoral")[1].split()[0].strip()
-
-    return {
-        "Name": name,
-        "Gender": gender,
-        "Age": age,
-        "Glucose": glucose,
-        "Hemoglobin": hemoglobin,
-        "Cholesterol": cholesterol
-    }
+# Function to extract data from the uploaded CSV
+def extract_data_from_csv(csv_file):
+    df = pd.read_csv(csv_file)
+    # Assuming the CSV contains one row of patient data
+    patient_data = df.iloc[0].to_dict()
+    return patient_data
 
 # Display Patient Summary Box
 def display_patient_summary(patient_data):
@@ -78,32 +41,32 @@ def display_patient_summary(patient_data):
 if selected == 'Diabetes Prediction':
     st.title('Diabetes Prediction using ML')
 
-    # Upload PDF file
-    uploaded_file = st.file_uploader("Upload Patient Report (PDF)", type=["pdf"])
+    # Upload CSV file
+    uploaded_file = st.file_uploader("Upload Patient Report (CSV)", type=["csv"])
 
     patient_data = {}
     if uploaded_file:
-        patient_data = extract_data_from_pdf(uploaded_file)
+        patient_data = extract_data_from_csv(uploaded_file)
         display_patient_summary(patient_data)
 
     # Fill the form with extracted data or leave blank if not found
     col1, col2, col3 = st.columns(3)
     with col1:
-        Pregnancies = st.text_input('Number of Pregnancies', value="")
+        Pregnancies = st.text_input('Number of Pregnancies', value=patient_data.get('Pregnancies', ''))
     with col2:
         Glucose = st.text_input('Glucose Level', value=patient_data.get('Glucose', ''))
     with col3:
-        BloodPressure = st.text_input('Blood Pressure value', value="")
+        BloodPressure = st.text_input('Blood Pressure value', value=patient_data.get('BloodPressure', ''))
 
     with col1:
-        SkinThickness = st.text_input('Skin Thickness value', value="")
+        SkinThickness = st.text_input('Skin Thickness value', value=patient_data.get('SkinThickness', ''))
     with col2:
-        Insulin = st.text_input('Insulin Level', value="")
+        Insulin = st.text_input('Insulin Level', value=patient_data.get('Insulin', ''))
     with col3:
-        BMI = st.text_input('BMI value', value="")
+        BMI = st.text_input('BMI value', value=patient_data.get('BMI', ''))
 
     with col1:
-        DiabetesPedigreeFunction = st.text_input('Diabetes Pedigree Function value', value="")
+        DiabetesPedigreeFunction = st.text_input('Diabetes Pedigree Function value', value=patient_data.get('DiabetesPedigreeFunction', ''))
     with col2:
         Age = st.text_input('Age of the Person', value=patient_data.get('Age', ''))
 
@@ -132,12 +95,12 @@ if selected == 'Diabetes Prediction':
 if selected == 'Heart Disease Prediction':
     st.title('Heart Disease Prediction using ML')
 
-    # Upload PDF file
-    uploaded_file = st.file_uploader("Upload Patient Report (PDF)", type=["pdf"])
+    # Upload CSV file
+    uploaded_file = st.file_uploader("Upload Patient Report (CSV)", type=["csv"])
 
     patient_data = {}
     if uploaded_file:
-        patient_data = extract_data_from_pdf(uploaded_file)
+        patient_data = extract_data_from_csv(uploaded_file)
         display_patient_summary(patient_data)
 
     # Fill the form with extracted data or leave blank if not found
@@ -150,11 +113,11 @@ if selected == 'Heart Disease Prediction':
         Cholesterol = st.text_input('Cholesterol Level', value=patient_data.get('Cholesterol', ''))
 
     with col1:
-        RestingBP = st.text_input('Resting Blood Pressure', value="")
+        RestingBP = st.text_input('Resting Blood Pressure', value=patient_data.get('RestingBP', ''))
     with col2:
-        MaxHR = st.text_input('Maximum Heart Rate Achieved', value="")
+        MaxHR = st.text_input('Maximum Heart Rate Achieved', value=patient_data.get('MaxHR', ''))
     with col3:
-        ExerciseInducedAngina = st.text_input('Exercise Induced Angina', value="")
+        ExerciseInducedAngina = st.text_input('Exercise Induced Angina', value=patient_data.get('ExerciseInducedAngina', ''))
 
     heart_diagnosis = ''
     if st.button('Heart Disease Test Result'):
@@ -179,29 +142,29 @@ if selected == 'Heart Disease Prediction':
 if selected == "Parkinsons Prediction":
     st.title("Parkinson's Disease Prediction using ML")
 
-    # Upload PDF file
-    uploaded_file = st.file_uploader("Upload Patient Report (PDF)", type=["pdf"])
+    # Upload CSV file
+    uploaded_file = st.file_uploader("Upload Patient Report (CSV)", type=["csv"])
 
     patient_data = {}
     if uploaded_file:
-        patient_data = extract_data_from_pdf(uploaded_file)
+        patient_data = extract_data_from_csv(uploaded_file)
         display_patient_summary(patient_data)
 
     # Fill the form with extracted data or leave blank if not found
     col1, col2, col3 = st.columns(3)
     with col1:
-        MDVP_Fo = st.text_input('MDVP:Fo(Hz)', value="")
+        MDVP_Fo = st.text_input('MDVP:Fo(Hz)', value=patient_data.get('MDVP_Fo', ''))
     with col2:
-        MDVP_Fhi = st.text_input('MDVP:Fhi(Hz)', value="")
+        MDVP_Fhi = st.text_input('MDVP:Fhi(Hz)', value=patient_data.get('MDVP_Fhi', ''))
     with col3:
-        MDVP_Flo = st.text_input('MDVP:Flo(Hz)', value="")
+        MDVP_Flo = st.text_input('MDVP:Flo(Hz)', value=patient_data.get('MDVP_Flo', ''))
 
     with col1:
-        MDVP_Jitter = st.text_input('MDVP:Jitter(%)', value="")
+        MDVP_Jitter = st.text_input('MDVP:Jitter(%)', value=patient_data.get('MDVP_Jitter', ''))
     with col2:
-        MDVP_Shimmer = st.text_input('MDVP:Shimmer', value="")
+        MDVP_Shimmer = st.text_input('MDVP:Shimmer', value=patient_data.get('MDVP_Shimmer', ''))
     with col3:
-        HNR = st.text_input('HNR', value="")
+        HNR = st.text_input('HNR', value=patient_data.get('HNR', ''))
 
     parkinsons_diagnosis = ''
     if st.button("Parkinson's Test Result"):
