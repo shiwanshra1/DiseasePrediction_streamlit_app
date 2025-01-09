@@ -1,1 +1,1 @@
-streamlit run "C:\Users\aahab\Desktop\project\app.py"
+streamlit run DieseaseDetection
